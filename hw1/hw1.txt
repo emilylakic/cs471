@@ -1,0 +1,198 @@
+Emily Lakic
+CS471 Assignment 1
+
+Problem 1
+
+Error 1: char 9a, b2; //error
+Error 1 solution & explanation: This is a lexical error because the lexer breaks the code into tokens. 9a is never a valid token. When you’re parsing the token you only have to look at the first character to determine if it’s an identifier or literal, so for the variable name 9a, the compiler must backtrack to go in the lexical analysis phase to identify that it is a variable.
+
+Error 2: INT ar[10]; //error
+Error 2 solution & explanation: This is a syntactical error because incorrect capitalization was used. C is a case-sensitive programming language for its identifiers. In this case, that identifier was int. The correct usage would have been ‘int’, instead of ‘INT’.
+
+Warning 3: long fr; nx; //error
+Warning 3 solution & explanation: This is a static semantic error as the statement with variable name nx is missing a type. 
+
+Warning 4: int auto ; //error
+Warning 4 solution & explanation: This is a syntactical error. In C, both the comma and the semicolon are more closely associated with the previous item - in this case, the semicolon with the variable name auto, than the following item. So one must never put a space before a semicolon or comma.
+
+Error 5: suto = chg(x); //error
+Error 5 solution & explanation: This is a static semantic error because it is accessing a reference that hasn’t been initialized, or declared with a type. It is also a syntactical error because as a statement, it is not correct.
+
+Warning 6: suto = chg(x); //error
+Warning 6 solution & explanation: This is a static semantic error because there is no function header for chg() above the main function, it is undefined for this function call.
+
+Error 7: return auto; //error
+Error 7 solution & explanation: This is a syntactical error because the variable auto of type int was never initialized with a value previously in the main function. Returning that variable would thus not return any integer value as none was defined. 
+
+Warning 8: if (fr = 0); //error
+Warning 8 solution & explanation: This is a logical error. The comparison operator must be used, because one equal sign indicates an assignment operator, meaning that that statement will always return 1, and be true. So the if statement will always happen which is not the intended behavior of the if statement. 
+
+Error 9: x = 10; //error
+Error 9 solution & explanation: This is a static semantic error because x is out of scope. The variable was declared in main, so it is not a global variable, and was passed into the chg function, although it has no reference to x from the main function as x was not an argument of the chg function.
+
+Error 10: ar[10] = 10; //error
+Error 10 solution & explanation: This is a uncheckable error because there is no array bounds checking in C, meaning you can access beyond a defined boundary. The highest index would be at ar[9], however we are putting the value 10 in memory at location ar[10]. It is unpredicted behavior because we cannot be certain what is at the memory location here.
+
+Problem 2
+
+Source used: https://www.d.umn.edu/~gshute/asm/control.xhtml
+
+	.file	"powI.c"
+	.text
+	.globl	powI
+	.type	powI, @function
+powI:
+.LFB0:
+	.cfi_startproc			#Code for initialization of the for loop
+	pushq	%rbp 			#Creation of the stack frame
+	.cfi_def_cfa_offset 16
+	.cfi_offset 6, -16
+	movq	%rsp, %rbp 		#Creation of the stack frame, address of current stack frame
+	.cfi_def_cfa_register 6
+	movl	%edi, -20(%rbp)		#Move contents of %edi register into -20(%rbp) register, store pow
+	movl	%esi, -24(%rbp)		#Move contents of %esi register into -24(%rbp) register, store base
+	movl	$1, -4(%rbp)		#acc is set to 1, move the contents of $1 (1) into -4(%rbp), store acc
+	movl	$0, -8(%rbp)		# p is set to 0, move the contents of $0 (0) into -8(%rbp), store p
+	jmp	.L2			#Translation: Jump to loop, for loop is executed
+.L3:
+	movl	-4(%rbp), %eax		#Retrieve acc, contents of -4(%rbp) previously set as 1 moved into %eax register
+	imull	-24(%rbp), %eax		#base multiplied with acc
+	movl	%eax, -4(%rbp)		#Move contents of %eax into -4(%rbp), acc result stored in 
+	addl	$1, -8(%rbp)		#Increment p by 1, add the contents of $1 (1) and -8(%rbp) registers
+.L2:
+	movl	-8(%rbp), %eax		#Move contents previously stored in p into register %eax, retrieve p
+	cmpl	-20(%rbp), %eax		#Compare to pow (refer to storing pow at movl %edi, -20(%rbp))
+	jl	.L3			#Translation: Branch to p < pow if condition is true (p less than pow) (.L3)
+	movl	-4(%rbp), %eax		#Move contents previously stored in acc into register %eax, retrieve acc
+	popq	%rbp			#Return address popped off stack
+	.cfi_def_cfa 7, 8
+	ret				#Return result of return acc
+	.cfi_endproc			#Exit from the function
+.LFE0:
+	.size	powI, .-powI
+	.ident	"GCC: (Debian 8.3.0-6) 8.3.0"
+	.section	.note.GNU-stack,"",@progbits
+
+Problem 3
+powF.c file included in submission folder
+
+1. powF.c
+#include <stdio.h>
+#include <stdlib.h>
+
+int powF(int base, int pow) {
+    if (pow != 0) {
+        return (base * powF(base, pow - 1));
+    }
+    else {
+        return 1;
+    }
+}
+
+int main(int argc, char **argv) {
+    if (argc < 3) {
+      printf("%s usage: [BASE] [POWER]\n", argv[0]);
+    return 1;
+    }
+    int base = atoi(argv[1]);
+    int pow = atoi(argv[2]);
+    int recur = powF(base, pow);
+    printf("%d\n", recur);
+    return 0;
+}
+
+2. Briefly discuss the computation complexity of both implementations of power (big-oh notation); one sentence will do.
+
+For the iterative approach (powI.c), the computation complexity is O(N) as the loop executes N times and the statements are O(1), so (N*O(1) = O(N)). For the recursive approach (powF.c), the computation complexity is also O(N) as the worst-case time is the slowest of either executing sequence 1 (if) or sequence 2 (else).
+
+3. In a language where you have the flexibility to implement an algorithm iteratively and recursively why would you choose one over the other? 
+
+Though both recursion and iteration solve complicated tasks, the task needing implementation ultimately determines which method is better over the other. Besides considering an implementation standpoint, what the programmer values is also important when met with the flexibility of implementing one method over the other. Though recursion uses more memory, it is simpler to implement, more readable to the programmer, and has significant usage with trees. The recursive approach is often preferred by mathematicians as it involves abstract mathematical ideology and offers a short solution with a potentially more complex design and test. Implementing an algorithm iteratively on the other hand involves a loop, or repetition. Iteration generally has a lesser time complexity than recursion. While recursion has a large amount of overhead, iteration does not involve any as there is no repetitive calling of the same function. Thus, when considering which of the two methods to implement, consider the properties of each and what the specific program at hand needs. For a program dealing primarily with functions, a small code size, and time complexity is not an issue and can be high, recursion is the best approach. For a program dealing primarily with loops, a large code size, and where time complexity needs to be balanced against such an expanded code size, iteration is the best approach. 
+
+Sources used: http://www.cs.cornell.edu/info/courses/spring-98/cs211/lecturenotes/07-recursion.pdf, https://www.geeksforgeeks.org/difference-between-recursion-and-iteration/
+
+Problem 4
+pow_full.py file included in submission folder
+powF.py file included in submission folder
+powI.py file included in submission folder
+
+powF.py
+#! /usr/bin/env python
+import sys
+
+def powF(base, pow):
+    if pow == 0:
+        return 1
+    else:
+        return (base * powF(base, pow - 1))
+
+if len(sys.argv) != 3:
+  print("%s usage: [BASE] [POWER]\n" % sys.argv[0])
+  exit()
+result = powF(int(sys.argv[1]),(int(sys.argv[2])))
+print(result)
+
+powI.py
+#! /usr/bin/env python
+import sys
+
+def powI(base, pow):
+    acc = 1
+    for p in range(pow):
+        acc = acc * base
+    return acc
+
+if len(sys.argv) != 3:
+  print("%s usage: [BASE] [POWER]\n" % sys.argv[0])
+  exit()
+result = powI(int(sys.argv[1]),(int(sys.argv[2])))
+print(result)
+
+Problem 5
+
+Behavior in C that is said to be undefined follows that code keeps on executing in a silent but faulty manner which may result in unpredicted results. Examples of undefined behaviors in C include dividing by 0, uninitialized variables, accessing the value of a NULL pointer, accessing out of bound, going beyond the limit of signed ints, and trying to modify a string literal. Either the program can crash with any sort of error messages, or data can be corrupted. Undefined behavior in C is allowed as compilers may avoid certain checks that are normally caught as errors in other languages. For example, a C program with a highly performing array does not need to keep track of the bounds and thus avoids the need for complex optimization.
+Source used: https://www.geeksforgeeks.org/undefined-behavior-c-cpp/
+
+Problem 6
+
+In C++, unspecified behavior and undefined behavior are different and are not interchangeable. Undefined behavior is implementation resulting in unpredictable results by the program. This kind of behavior may pass unnoticed, or be considered a run time crash or an unreliable and unstable program state. Unspecified behavior is different in that its implementation occurs in cases where it is intentionally unspecified by the C++ standard. This is to allow for a simpler and more efficient compiler implementation on various platforms. This guarantees that the behavior of such an implementation is consistent and documented. This type of behavior is important if your software is required to be portable, but otherwise is something not to worry about. On the other hand, undefined behavior is always undesirable.
+Source used: http://www.devx.com/tips/Tip/12684
+
+Problem 7
+
+Page 38 - exercise 1.1
+My favorite imperative language is C, and the following are examples for different types of errors.
+
+(a) A lexical error, detected by the scanner: 
+printf(“Hello”);$
+This is a lexical error detected by the scanner because $ is an illegal character which appears at the end of the print statement.
+
+(b) A syntax error, detected by the parser:
+include <stdlib.h>
+This is a syntax error because include statements in C are preceded with a ‘#’ (ex. #include <stdlib.h>) and thus the parser detects the error at the “<“ symbol.
+
+(c) A static semantic error, detected by semantic analysis:
+int findMin( integer x, integer y ) {
+This is a static semantic error because “integer” is not a known type and is thus caught by semantic analysis. Rather “int” is expected as the correct datatype.
+
+(d) A dynamic semantic error, detected by code generated by the compiler:
+int pow, base;
+printf(“Input an integer for the power and an integer for the base:\n”);
+scanf(“%f %f”, pow, base);
+This is a dynamic semantic error because of an error in the format specifier, which is used to specify the type and format of the data to be retrieved from the stream. %f refers to a float data type. Since our variables pow and base are integers, %d should have been used as the format specifier.
+Source used: https://www.geeksforgeeks.org/difference-d-format-specifier-c-language/ 
+
+(e) An error that the compiler can neither catch nor easily generate code to catch (this should be a violation of the language definition, not just a program bug):
+#include <stdio.h>
+/*Find the minimum value, x or y*/
+int findMin(int x, int y) {
+	if (x > y) {
+ 		return x;
+	} else {
+		return y;
+}
+This is a logical error that the compiler cannot detect. The program is supposed to find the minimum between two integers, x and y. However, the maximum is returned instead of the minimum when x and y are compared in the if-statement. 
+
+Problem 8
+
+Syntax language denotes errors that occur during the parser stage, and are structural and grammatical errors. Examples of syntax errors are a missed semicolon or parenthesis, at the simplest form, to two types in a row followed by a variable (type type variable), or a type followed by two variables (type variable variable). Syntax errors are handled at compilation time. Syntax deals with context-free grammar, regular expression, and attribute grammars. Semantics are the meaning behind syntax errors. Semantics describes the relationship between the sense of the program and the computational model, and its errors are confronted at runtime. The interpretation of a program is essential to semantics so as to help the programmer predict the outcome of program execution and understand it in a simple way. Semantic errors are usually difficult to find, and are encountered when the results do not match the expectations, or at runtime as mentioned previously. As an example, a syntax error could be int multiplyNumbers = a b *; This is a syntax error due to the misplacement of the multiplication symbol. A semantic error on the other hand, following alongside the previous example, could be int multiplyNumbers = a/b. This error represents the meaning of the sentences of the language; in our case, if the program’s goal was to multiply two numbers to store in the integer ‘multiplyNumbers’, our program instead divided those two numbers.
